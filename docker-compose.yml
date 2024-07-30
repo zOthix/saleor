@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres
+    container_name: postgres_container
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: saleor
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - postgres_run:/var/run/postgresql
+  
+  redis:
+    image: redis
+    container_name: redis_container
+    ports:
+      - "6379:6379"
+
+  saleor:
+    build: .
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - postgres_run:/var/run/postgresql
+    container_name: saleor_container
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_CONNECTION_DEFAULT_NAME: "postgres://postgres:postgres@postgres:5432/saleor"
+      DATABASE_CONNECTION_REPLICA_NAME: "postgres://postgres:postgres@postgres:5432/saleor"
+      DB_NAME: "saleor"
+      DATABASE_URL: "postgres://postgres:postgres@postgres:5432/saleor"
+      DASHBOARD_URL: "http://localhost:8000/"
+      DEFAULT_FROM_EMAIL: "noreply@example.com"
+      CELERY_BROKER_URL: "redis://redis:6379/1"
+      SECRET_KEY: "changeme"
+      EMAIL_URL: "smtp://mailpit:1025"
+      STATIC_URL: "/static/"
+
+
+volumes:
+  postgres_data:
+  postgres_run:
